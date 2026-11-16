@@ -558,6 +558,8 @@ async function loadVideos() {
 }
 
 // Search people
+
+// Search people
 let searchTimer;
 
 $("#searchInput").addEventListener("input", event => {
@@ -569,13 +571,26 @@ $("#searchInput").addEventListener("input", event => {
 
   searchTimer = setTimeout(async () => {
     try {
-      const result = await api(`/api/users/search?q=${encodeURIComponent(query)}`);
+      const result = await api(
+        `/api/users/search?q=${encodeURIComponent(query)}`
+      );
 
       $("#searchResults").innerHTML = result.users.length
         ? result.users.map(user => `
           <div class="person-row">
             <strong>${esc(user.name)}</strong>
-            <button data-open-profile="${user.id}">View Profile</button>
+
+            <button data-open-profile="${user.id}">
+              View Profile
+            </button>
+
+            ${Number(user.id) !== Number(currentUser.id) ? `
+              <button
+                data-add-friend="${user.id}"
+                class="primary-btn">
+                Add Friend
+              </button>
+            ` : ""}
           </div>
         `).join("")
         : "<p>No people found.</p>";
