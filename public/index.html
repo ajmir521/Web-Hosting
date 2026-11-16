@@ -1,43 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HappyLife — Share your moments</title><link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HappyLife - Connect with friends</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cloudflare.com" />
 </head>
 <body>
-<header class="topbar"><a class="brand" href="/">HappyLife<span>●</span></a><div id="topUser"></div></header>
-<main>
-<section id="auth" class="auth-wrap">
-  <div class="intro"><div class="mark">H</div><h1>Share life. Stay connected.</h1><p>A friendly place to share your moments, ideas and everyday stories.</p></div>
-  <div class="auth-card">
-    <div class="tabs"><button class="tab active" data-tab="login">Log in</button><button class="tab" data-tab="register">Create account</button></div>
-    <form id="loginForm"><input name="email" type="email" placeholder="Email address" required><input name="password" type="password" placeholder="Password" required><button class="primary">Log in</button></form>
-    <form id="registerForm" hidden><input name="name" placeholder="Your name" minlength="2" maxlength="50" required><input name="email" type="email" placeholder="Email address" required><input name="password" type="password" placeholder="Password (at least 8 characters)" minlength="8" required><button class="primary">Create account</button></form>
-    <p id="authMessage" class="message"></p><small>Use a unique password. This starter app stores accounts in its own local database.</small>
-  </div>
-</section>
-<section id="app" hidden>
-  <div class="layout">
-    <aside class="side"><div class="side-card"><div class="avatar">H</div><h3 id="welcomeName">Welcome</h3><p>Your HappyLife community</p><button id="logout" class="ghost">Log out</button></div><div class="side-note">✨ Share kindly. Connect positively.</div></aside>
-    <section class="feed">
-      <div class="composer card">
-        <h2>Create a post</h2>
-        <form id="postForm">
-          <textarea name="body" placeholder="What's happening?" maxlength="2000"></textarea>
-          <div class="post-options">
-            <select name="type" id="postType"><option value="text">📝 Text post</option><option value="photo">📷 Photo post</option><option value="feeling">😊 Feeling / activity</option><option value="link">🔗 Link post</option><option value="poll">📊 Question / poll</option></select>
-            <input name="extra" id="extra" placeholder="Optional: feeling, link, or poll choices">
-            <label class="file-label">Add photo <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
-            <button class="primary publish">Post</button>
-          </div>
-        </form><p id="postMessage" class="message"></p>
+
+  <!-- Top Facebook-Style Navigation Bar -->
+  <header class="fb-navbar" id="top-navbar">
+    <div class="nav-left">
+      <div class="fb-logo">h</div>
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Search HappyLife" />
       </div>
-      <div class="feed-heading"><h2>Your feed</h2><span>Latest posts</span></div>
-      <div id="posts"></div>
+    </div>
+
+    <div class="nav-center">
+      <button class="nav-tab active" title="Home"><i class="fa-solid fa-house"></i></button>
+      <button class="nav-tab" title="Friends"><i class="fa-solid fa-user-group"></i></button>
+      <button class="nav-tab" title="Watch"><i class="fa-solid fa-tv"></i></button>
+      <button class="nav-tab" title="Groups"><i class="fa-solid fa-users"></i></button>
+    </div>
+
+    <div class="nav-right">
+      <div class="user-pill" id="nav-user-info" style="display: none;">
+        <div class="avatar-sm" id="nav-avatar">U</div>
+        <span id="nav-username">User</span>
+      </div>
+      <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
+      <button class="icon-btn" id="logout-btn" title="Log Out" style="display: none;">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Auth Section (Shown when logged out - Classic Facebook Login UI) -->
+  <main class="auth-wrapper" id="auth-section">
+    <div class="auth-container">
+      <div class="auth-brand">
+        <h1>happylife</h1>
+        <p>Connect with friends and the world around you on HappyLife.</p>
+      </div>
+
+      <div class="auth-cards">
+        <!-- Login Form -->
+        <div class="card auth-card">
+          <form id="login-form">
+            <input type="email" id="login-email" placeholder="Email address" required />
+            <input type="password" id="login-password" placeholder="Password" required />
+            <button type="submit" class="btn-fb-primary">Log In</button>
+          </form>
+          <div class="divider"></div>
+          <button type="button" class="btn-fb-green" onclick="document.getElementById('register-box').style.display='block'">
+            Create new account
+          </button>
+        </div>
+
+        <!-- Register Form -->
+        <div class="card auth-card" id="register-box" style="margin-top: 15px;">
+          <h3>Sign Up</h3>
+          <p class="sub-text">It’s quick and easy.</p>
+          <form id="register-form">
+            <input type="text" id="register-name" placeholder="Full name" required />
+            <input type="email" id="register-email" placeholder="Email address" required />
+            <input type="password" id="register-password" placeholder="New password (min 8 chars)" required />
+            <button type="submit" class="btn-fb-green">Sign Up</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Main 3-Column Facebook Feed (Shown when logged in) -->
+  <div class="fb-layout" id="app-section" style="display: none;">
+    
+    <!-- Left Sidebar -->
+    <aside class="left-sidebar">
+      <div class="sidebar-item profile-link">
+        <div class="avatar-md" id="sidebar-avatar">A</div>
+        <strong id="sidebar-username">Ajmir Hosen</strong>
+      </div>
+      <div class="sidebar-item"><i class="fa-solid fa-user-group blue"></i> <span>Friends</span></div>
+      <div class="sidebar-item"><i class="fa-solid fa-clock-rotate-left blue"></i> <span>Memories</span></div>
+      <div class="sidebar-item"><i class="fa-solid fa-bookmark purple"></i> <span>Saved</span></div>
+      <div class="sidebar-item"><i class="fa-solid fa-users blue"></i> <span>Groups</span></div>
+      <div class="sidebar-item"><i class="fa-solid fa-video blue"></i> <span>Video</span></div>
+    </aside>
+
+    <!-- Center Feed -->
+    <section class="center-feed">
+      
+      <!-- Stories Row -->
+      <div class="stories-row">
+        <div class="story-card create-story">
+          <div class="story-plus"><i class="fa-solid fa-plus"></i></div>
+          <span>Create Story</span>
+        </div>
+        <div class="story-card sample-story" style="background: linear-gradient(135deg, #1877f2, #42b72a);">
+          <span>Welcome to HappyLife!</span>
+        </div>
+        <div class="story-card sample-story" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+          <span>Share your moments</span>
+        </div>
+      </div>
+
+      <!-- Create Post Box -->
+      <div class="card create-post-card">
+        <form id="post-form">
+          <div class="post-top">
+            <div class="avatar-md" id="post-avatar">A</div>
+            <textarea id="post-content" rows="2" placeholder="What's on your mind?" required></textarea>
+          </div>
+          
+          <div class="post-extras">
+            <select id="post-type">
+              <option value="text">📝 Text Post</option>
+              <option value="feeling">😊 Feeling/Activity</option>
+              <option value="link">🔗 Link</option>
+              <option value="question">❓ Question</option>
+            </select>
+            <input type="text" id="post-extra" placeholder="Optional: feeling, link, or context" />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="post-actions">
+            <label class="photo-upload-btn">
+              <i class="fa-solid fa-images green"></i> Photo/Image
+              <input type="file" id="post-image" accept="image/*" hidden />
+            </label>
+            <span id="file-name" class="file-label"></span>
+            <button type="submit" class="btn-fb-primary btn-post">Post</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Posts Feed Container -->
+      <div id="posts-container" class="posts-feed">
+        <!-- Posts will be dynamically injected here by app.js -->
+      </div>
     </section>
-    <aside class="right"><div class="card tips"><h3>Welcome to HappyLife</h3><p>Post a thought, share a photo, ask a question or share a useful link.</p><p class="muted">Be respectful and protect your personal information.</p></div></aside>
+
+    <!-- Right Sidebar -->
+    <aside class="right-sidebar">
+      <div class="card right-card">
+        <h4>Community Info</h4>
+        <p>Welcome to <strong>HappyLife Social</strong>. Share thoughts, photos, and connect with your friends.</p>
+      </div>
+      <div class="contacts-header">
+        <h4>Contacts</h4>
+      </div>
+      <div class="sidebar-item">
+        <div class="avatar-sm online">H</div>
+        <span>HappyLife Bot</span>
+      </div>
+    </aside>
+
   </div>
-</section>
-</main>
-<div id="toast" role="status"></div><script src="/app.js"></script>
-</body></html>
+
+  <script src="app.js"></script>
+  <script>
+    // Show selected file name
+    const fileInput = document.getElementById('post-image');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        document.getElementById('file-name').textContent = this.files[0] ? this.files[0].name : '';
+      });
+    }
+  </script>
+</body>
+</html>
