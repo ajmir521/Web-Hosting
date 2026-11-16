@@ -10,6 +10,32 @@ body {
   color: #050505;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1c1e21;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.error-msg {
+  color: #e41e3f;
+  font-size: 13px;
+  margin: 6px 0;
+  font-weight: 500;
+}
+
 /* Top Navbar */
 .fb-navbar {
   position: sticky;
@@ -85,14 +111,15 @@ body {
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .user-pill {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px;
+  background: #f0f2f5;
+  padding: 4px 12px 4px 4px;
   border-radius: 20px;
   font-weight: 600;
   font-size: 14px;
@@ -114,7 +141,7 @@ body {
 }
 
 /* Avatars */
-.avatar-sm, .avatar-md {
+.avatar-sm, .avatar-md, .mini-avatar {
   background: #1877f2;
   color: white;
   font-weight: bold;
@@ -125,9 +152,9 @@ body {
   flex-shrink: 0;
 }
 .avatar-sm { width: 32px; height: 32px; font-size: 14px; }
-.avatar-md { width: 40px; height: 40px; font-size: 16px; }
+.avatar-md, .mini-avatar { width: 40px; height: 40px; font-size: 16px; }
 
-/* Auth / Login Page (Facebook Style) */
+/* Auth / Login Page */
 .auth-wrapper {
   min-height: calc(100vh - 56px);
   display: flex;
@@ -177,6 +204,33 @@ body {
   padding: 16px;
 }
 
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: #f0f2f5;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.auth-tabs .tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #65676b;
+  cursor: pointer;
+}
+
+.auth-tabs .tab.active {
+  background: #ffffff;
+  color: #1877f2;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
 .auth-card input {
   width: 100%;
   padding: 14px 16px;
@@ -198,36 +252,31 @@ body {
   border: none;
   border-radius: 6px;
   padding: 12px;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.btn-fb-primary:hover {
-  background: #166fe5;
-}
+.btn-fb-primary:hover { background: #166fe5; }
 
 .btn-fb-green {
+  width: 100%;
   background: #42b72a;
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 12px 16px;
-  font-size: 16px;
+  padding: 12px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  display: block;
-  margin: 0 auto;
 }
 
-.btn-fb-green:hover {
-  background: #36a420;
-}
+.btn-fb-green:hover { background: #36a420; }
 
 .divider {
   height: 1px;
   background: #dadde1;
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 /* 3-Column Feed Layout */
@@ -258,10 +307,7 @@ body {
   font-size: 15px;
 }
 
-.sidebar-item:hover {
-  background: #e4e6eb;
-}
-
+.sidebar-item:hover { background: #e4e6eb; }
 .sidebar-item i.blue { color: #1877f2; font-size: 20px; width: 24px; }
 .sidebar-item i.purple { color: #9333ea; font-size: 20px; width: 24px; }
 
@@ -280,7 +326,7 @@ body {
 
 .story-card {
   flex: 1;
-  height: 160px;
+  height: 150px;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -310,14 +356,10 @@ body {
   margin-bottom: 8px;
 }
 
-.sample-story {
-  color: #fff;
-}
+.sample-story { color: #fff; }
 
 /* Create Post Card */
-.create-post-card {
-  margin-bottom: 16px;
-}
+.create-post-card { margin-bottom: 16px; }
 
 .post-top {
   display: flex;
@@ -343,7 +385,7 @@ body {
 }
 
 .post-extras select, .post-extras input {
-  padding: 6px 10px;
+  padding: 7px 10px;
   border: 1px solid #dddfe2;
   border-radius: 6px;
   font-size: 13px;
@@ -352,7 +394,7 @@ body {
 
 .post-extras input { flex: 1; }
 
-.post-actions {
+.post-actions-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -372,6 +414,7 @@ body {
 
 .photo-upload-btn:hover { background: #f0f2f5; }
 .photo-upload-btn i.green { color: #45bd62; font-size: 18px; }
+.file-label { font-size: 12px; color: #65676b; }
 
 .btn-post {
   width: auto;
@@ -379,21 +422,148 @@ body {
   font-size: 15px;
 }
 
-/* Post Card Styling (Matches dynamic posts from app.js) */
-.post-card, .post-item {
-  background: #fff;
+/* Facebook Post Cards */
+.post {
+  background: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   padding: 16px;
   margin-bottom: 16px;
 }
 
-.post-card img, .post-item img {
-  width: 100%;
-  max-height: 450px;
-  object-fit: cover;
+.post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.post-head strong {
+  display: block;
+  font-size: 15px;
+  color: #050505;
+}
+
+.post-head small {
+  color: #65676b;
+  font-size: 12px;
+}
+
+.post-body {
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+
+.post-extra {
+  background: #f0f2f5;
+  padding: 8px 12px;
   border-radius: 6px;
-  margin-top: 10px;
+  font-size: 14px;
+  color: #1877f2;
+  margin-bottom: 10px;
+}
+
+.post img {
+  width: 100%;
+  max-height: 480px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.post-actions {
+  display: flex;
+  border-top: 1px solid #ced0d4;
+  border-bottom: 1px solid #ced0d4;
+  margin-top: 12px;
+  padding: 4px 0;
+  gap: 8px;
+}
+
+.post-actions button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #65676b;
+  cursor: pointer;
+}
+
+.post-actions button:hover {
+  background: #f0f2f5;
+}
+
+.post-actions button.liked {
+  color: #1877f2;
+}
+
+/* Comments Section */
+.comments {
+  margin-top: 12px;
+}
+
+.comment {
+  background: #f0f2f5;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  margin-bottom: 6px;
+  display: inline-block;
+  width: 100%;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-form input {
+  flex: 1;
+  background: #f0f2f5;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 14px;
+  outline: none;
+}
+
+.comment-form button {
+  background: #1877f2;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.right-card h4, .contacts-header h4 {
+  color: #65676b;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.right-card p {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #1c1e21;
+}
+
+.contacts-header {
+  margin-top: 16px;
+  padding: 0 10px;
+}
+
+.muted {
+  color: #65676b;
+  font-size: 14px;
+  text-align: center;
 }
 
 /* Responsive */
