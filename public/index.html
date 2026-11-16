@@ -1,166 +1,192 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HappyLife - Connect with friends</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cloudflare.com" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HappyLife - Connect with Friends</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast" style="display: none;"></div>
+  <div id="toast" class="toast" hidden></div>
 
-  <!-- Top Facebook-Style Navigation Bar -->
   <header class="fb-navbar">
     <div class="nav-left">
-      <div class="fb-logo">h</div>
-      <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="searchInput" placeholder="Search HappyLife posts..." />
-      </div>
+      <a href="#" class="logo" data-page="home">HappyLife</a>
+      <input id="searchInput" type="search" placeholder="Search people...">
     </div>
 
-    <div class="nav-center">
-      <button class="nav-tab active" title="Home"><i class="fa-solid fa-house"></i></button>
-      <button class="nav-tab" title="Friends"><i class="fa-solid fa-user-group"></i></button>
-      <button class="nav-tab" title="Watch"><i class="fa-solid fa-tv"></i></button>
-      <button class="nav-tab" title="Groups"><i class="fa-solid fa-users"></i></button>
-    </div>
+    <nav class="nav-center">
+      <button class="nav-tab active" data-page="home">Home</button>
+      <button class="nav-tab" data-page="friends">Friends</button>
+      <button class="nav-tab" data-page="requests">Requests</button>
+      <button class="nav-tab" data-page="watch">Watch</button>
+    </nav>
 
     <div class="nav-right">
-      <div class="user-pill" id="navUserPill" hidden>
-        <div class="avatar-sm" id="topAvatar">U</div>
-        <span id="topUser"></span>
-      </div>
-      <button class="icon-btn" id="logout" title="Log Out" hidden>
-        <i class="fa-solid fa-right-from-bracket"></i>
+      <button id="navProfile" class="nav-user" data-page="profile">
+        <span id="topAvatar" class="avatar-sm">H</span>
+        <span id="topUser">User</span>
       </button>
+      <button id="logout" class="secondary-btn">Log out</button>
     </div>
   </header>
 
-  <!-- Auth Section (Classic Facebook Login & Signup UI) -->
-  <main class="auth-wrapper" id="auth">
+  <section id="auth" class="auth-wrapper">
     <div class="auth-container">
       <div class="auth-brand">
-        <h1>happylife</h1>
-        <p>Connect with friends and the world around you on HappyLife.</p>
+        <h1>HappyLife</h1>
+        <p>Connect with friends and share your moments.</p>
       </div>
 
       <div class="auth-cards">
-        <div class="card auth-card">
+        <div class="card">
           <div class="auth-tabs">
-            <button type="button" class="tab active" data-tab="login">Log In</button>
-            <button type="button" class="tab" data-tab="register">Create Account</button>
+            <button id="loginTab" class="active">Login</button>
+            <button id="registerTab">Register</button>
           </div>
 
-          <p id="authMessage" class="error-msg"></p>
-
-          <!-- Login Form -->
           <form id="loginForm">
-            <input type="email" name="email" placeholder="Email address" required />
-            <input type="password" name="password" placeholder="Password" required />
-            <button type="submit" class="btn-fb-primary">Log In</button>
+            <input name="email" type="email" placeholder="Email address" required>
+            <input name="password" type="password" placeholder="Password" required>
+            <button type="submit" class="primary-btn">Log in</button>
           </form>
 
-          <!-- Register Form -->
           <form id="registerForm" hidden>
-            <input type="text" name="name" placeholder="Full name" required />
-            <input type="email" name="email" placeholder="Email address" required />
-            <input type="password" name="password" placeholder="Password (at least 8 characters)" minlength="8" required />
-            <button type="submit" class="btn-fb-green">Sign Up</button>
+            <input name="name" type="text" placeholder="Full name" required minlength="2" maxlength="50">
+            <input name="email" type="email" placeholder="Email address" required>
+            <input name="password" type="password" placeholder="Password (8 characters minimum)" required minlength="8">
+            <button type="submit" class="primary-btn">Create account</button>
           </form>
+
+          <p id="authMessage" class="message"></p>
         </div>
       </div>
     </div>
-  </main>
+  </section>
 
-  <!-- Main 3-Column Facebook Feed (Shown when logged in) -->
-  <div class="fb-layout" id="app" hidden>
-    
-    <!-- Left Sidebar -->
+  <main id="app" class="fb-layout" hidden>
+
     <aside class="left-sidebar">
-      <div class="sidebar-item profile-link">
-        <div class="avatar-md" id="sidebarAvatar">A</div>
-        <strong id="welcomeName">User</strong>
+      <div class="side-card">
+        <button class="side-link" data-page="profile">My Profile</button>
+        <button class="side-link" data-page="home">Home Feed</button>
+        <button class="side-link" data-page="friends">My Friends</button>
+        <button class="side-link" data-page="requests">Friend Requests</button>
+        <button class="side-link" data-page="watch">Videos</button>
       </div>
-      <div class="sidebar-item"><i class="fa-solid fa-user-group blue"></i> <span>Friends</span></div>
-      <div class="sidebar-item"><i class="fa-solid fa-clock-rotate-left blue"></i> <span>Memories</span></div>
-      <div class="sidebar-item"><i class="fa-solid fa-bookmark purple"></i> <span>Saved</span></div>
-      <div class="sidebar-item"><i class="fa-solid fa-users blue"></i> <span>Groups</span></div>
-      <div class="sidebar-item"><i class="fa-solid fa-video blue"></i> <span>Video</span></div>
     </aside>
 
-    <!-- Center Feed -->
     <section class="center-feed">
-      
-      <!-- Stories Row -->
-      <div class="stories-row">
-        <div class="story-card create-story" onclick="document.querySelector('#postForm textarea').focus()">
-          <div class="story-plus"><i class="fa-solid fa-plus"></i></div>
-          <span>Create Story</span>
-        </div>
-        <div class="story-card sample-story" style="background: linear-gradient(135deg, #1877f2, #00c6ff);">
-          <span>Welcome to HappyLife!</span>
-        </div>
-        <div class="story-card sample-story" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
-          <span>Share your moments</span>
-        </div>
-      </div>
 
-      <!-- Create Post Box -->
-      <div class="card create-post-card">
-        <form id="postForm" enctype="multipart/form-data">
-          <div class="post-top">
-            <div class="avatar-md" id="postAvatar">A</div>
-            <textarea name="body" rows="2" placeholder="What's on your mind?"></textarea>
-          </div>
-          
-          <div class="post-extras">
+      <section id="homePage" class="page">
+        <div class="welcome-card">
+          <h2>Welcome to HappyLife!</h2>
+          <p>Share your thoughts, photos and videos with friends.</p>
+        </div>
+
+        <div class="card create-post">
+          <h3>Create a post</h3>
+          <form id="postForm">
+            <textarea name="body" placeholder="What's on your mind?" rows="3"></textarea>
+
             <select name="type" id="postType">
-              <option value="text">📝 Text post</option>
-              <option value="feeling">😊 Feeling/activity</option>
-              <option value="link">🔗 Link</option>
-              <option value="poll">📊 Question / Poll</option>
+              <option value="text">Text post</option>
+              <option value="photo">Photo post</option>
+              <option value="video">Video post</option>
+              <option value="feeling">Feeling</option>
+              <option value="link">Link</option>
+              <option value="poll">Poll</option>
             </select>
-            <input type="text" name="extra" id="extra" placeholder="Optional extra information" />
-          </div>
 
-          <p id="postMessage" class="error-msg"></p>
-          <div class="divider"></div>
+            <input name="extra" id="extra" type="text" placeholder="Optional details or link">
 
-          <div class="post-actions-bar">
-            <label class="photo-upload-btn">
-              <i class="fa-solid fa-images green"></i> Photo/Image
-              <input type="file" name="image" id="postImage" accept="image/*" hidden />
+            <label class="upload-label">
+              Choose photo
+              <input type="file" name="image" id="postImage" accept="image/jpeg,image/png,image/webp,image/gif">
             </label>
-            <span id="fileName" class="file-label"></span>
-            <button type="submit" class="btn-fb-primary btn-post">Post</button>
-          </div>
-        </form>
-      </div>
 
-      <!-- Posts Feed Container -->
-      <div id="posts" class="posts-feed"></div>
+            <label class="upload-label">
+              Choose video
+              <input type="file" name="video" id="postVideo" accept="video/mp4,video/webm,video/ogg">
+            </label>
+
+            <p id="fileName" class="small-text"></p>
+            <p id="postMessage" class="message"></p>
+
+            <button type="submit" class="primary-btn">Publish Post</button>
+          </form>
+        </div>
+
+        <div id="posts" class="posts-list"></div>
+      </section>
+
+      <section id="friendsPage" class="page" hidden>
+        <div class="card">
+          <h2>My Friends</h2>
+          <div id="friendsList"></div>
+        </div>
+      </section>
+
+      <section id="requestsPage" class="page" hidden>
+        <div class="card">
+          <h2>Friend Requests</h2>
+          <h3>Incoming Requests</h3>
+          <div id="incomingRequests"></div>
+          <h3>Sent Requests</h3>
+          <div id="outgoingRequests"></div>
+        </div>
+      </section>
+
+      <section id="profilePage" class="page" hidden>
+        <div class="card profile-card">
+          <div class="profile-avatar" id="profileAvatar">H</div>
+          <h2 id="profileName">My Profile</h2>
+          <p id="profileEmail"></p>
+          <p id="profileBio"></p>
+          <div id="profileActions"></div>
+        </div>
+
+        <div class="card" id="editProfileBox">
+          <h3>Edit Profile</h3>
+          <form id="profileForm">
+            <input name="name" id="editName" placeholder="Your name" required maxlength="50">
+            <textarea name="bio" id="editBio" placeholder="Write something about yourself" maxlength="300"></textarea>
+            <button class="primary-btn" type="submit">Save Profile</button>
+          </form>
+          <p id="profileMessage" class="message"></p>
+        </div>
+
+        <h3>Posts</h3>
+        <div id="profilePosts" class="posts-list"></div>
+      </section>
+
+      <section id="watchPage" class="page" hidden>
+        <div class="card">
+          <h2>Watch Videos</h2>
+          <p>Videos shared by the HappyLife community.</p>
+        </div>
+        <div id="videoPosts" class="posts-list"></div>
+      </section>
+
+      <section id="searchPage" class="page" hidden>
+        <div class="card">
+          <h2>Search People</h2>
+          <div id="searchResults"></div>
+        </div>
+      </section>
+
     </section>
 
-    <!-- Right Sidebar -->
     <aside class="right-sidebar">
-      <div class="card right-card">
-        <h4>Community Info</h4>
-        <p>Welcome to <strong>HappyLife Social</strong>. Post thoughts, share photos, and connect with everyone.</p>
-      </div>
-      <div class="contacts-header">
-        <h4>Contacts</h4>
-      </div>
-      <div class="sidebar-item">
-        <div class="avatar-sm">H</div>
-        <span>HappyLife Community</span>
+      <div class="card">
+        <h3>HappyLife Community</h3>
+        <p>Connect, share and stay in touch with your friends.</p>
       </div>
     </aside>
 
-  </div>
+  </main>
 
   <script src="app.js"></script>
 </body>
