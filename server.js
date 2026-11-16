@@ -19,6 +19,25 @@ app.set("trust proxy", 1);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 
+// Normalize Gmail addresses
+function normalizeEmail(raw) {
+  let email = String(raw || "").trim().toLowerCase();
+  email = email.replace(/\s+/g, "");
+
+  const parts = email.split("@");
+
+  if (
+    parts.length === 2 &&
+    (parts[1] === "gmail.com" || parts[1] === "googlemail.com")
+  ) {
+    let username = parts[0].split("+")[0];
+    username = username.replace(/\./g, "");
+    email = username + "@gmail.com";
+  }
+
+  return email;
+}
+
 // Database tables
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
@@ -73,9 +92,10 @@ CREATE TABLE IF NOT EXISTS shares (
 );
 `);
 
-// Safe database migrations for existing databases
+// Safe database migrations
 function addColumnIfMissing(table, column, definition) {
   const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+
   if (!columns.some(col => col.name === column)) {
     db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   }
@@ -91,10 +111,12 @@ fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, uploadDir),
+
   filename: (_, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const safeName =
       Date.now() + "-" + Math.random().toString(36).slice(2) + ext;
+
     cb(null, safeName);
   }
 });
@@ -112,9 +134,15 @@ const allowedTypes = [
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },
+
   fileFilter: (_, file, cb) => {
-    if (allowedTypes.includes(file.mimetype)) return cb(null, true);
-    cb(new Error("Only JPG, PNG, WEBP, GIF, MP4, WEBM and OGG files are allowed."));
+    if (allowedTypes.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+
+    cb(new Error(
+      "Only JPG, PNG, WEBP, GIF, MP4, WEBM and OGG files are allowed."
+    ));
   }
 });
 
@@ -127,10 +155,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "change-this-secret-before-deployment",
   resave: false,
   saveUninitialized: false,
+
   store: new SQLiteStore({
     db: "sessions.db",
     dir: __dirname
   }),
+
   cookie: {
     httpOnly: true,
     sameSite: "lax",
@@ -142,12 +172,15 @@ app.use(session({
 app.use(express.static(path.join(__dirname, "public")));
 
 const getUser = id =>
-  db.prepare("SELECT id, name, email, bio, created_at FROM users WHERE id = ?").get(id);
+  db.prepare(
+    "SELECT id, name, email, bio, created_at FROM users WHERE id = ?"
+  ).get(id);
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Please log in first." });
   }
+
   next();
 }
 
@@ -171,58 +204,101 @@ function getPost(postId, userId) {
 
 // Current user
 app.get("/api/me", (req, res) => {
-  if (!req.session.userId) return res.json({ user: null });
+  if (!req.session.userId) {
+    return res.json({ user: null });
+  }
+
   res.json({ user: getUser(req.session.userId) || null });
 });
 
 // Register
 app.post("/api/register", (req, res) => {
   const name = String(req.body.name || "").trim();
-  const email = String(req.body.email || "").trim().toLowerCase();
+  const email = normalizeEmail(req.body.email);
   const password = String(req.body.password || "");
 
   if (name.length < 2 || name.length > 50) {
-    return res.status(400).json({ error: "Name must be 2–50 characters." });
+    return res.status(400).json({
+      error: "Name must be 2–50 characters."
+    });
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ error: "Enter a valid email address." });
+    return res.status(400).json({
+      error: "Enter a valid email address."
+    });
   }
 
   if (password.length < 8) {
-    return res.status(400).json({ error: "Password must be at least 8 characters." });
+    return res.status(400).json({
+      error: "Password must be at least 8 characters."
+    });
+  }
+
+  // Check all existing accounts using normalized email
+  const existingUsers = db.prepare(
+    "SELECT id, email FROM users"
+  ).all();
+
+  const duplicate = existingUsers.some(
+    user => normalizeEmail(user.email) === email
+  );
+
+  if (duplicate) {
+    return res.status(409).json({
+      error: "This Gmail is already registered. One Gmail can only create one account."
+    });
   }
 
   try {
     const passwordHash = bcrypt.hashSync(password, 12);
+
     const result = db.prepare(`
       INSERT INTO users (name, email, password_hash)
       VALUES (?, ?, ?)
     `).run(name, email, passwordHash);
 
     req.session.userId = Number(result.lastInsertRowid);
-    res.json({ user: getUser(req.session.userId) });
+
+    res.json({
+      user: getUser(req.session.userId)
+    });
+
   } catch (error) {
     if (String(error.message).includes("UNIQUE")) {
-      return res.status(409).json({ error: "This email is already registered." });
+      return res.status(409).json({
+        error: "This email is already registered."
+      });
     }
-    res.status(500).json({ error: "Registration failed." });
+
+    res.status(500).json({
+      error: "Registration failed."
+    });
   }
 });
 
 // Login
 app.post("/api/login", (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
+  const email = normalizeEmail(req.body.email);
   const password = String(req.body.password || "");
 
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  const users = db.prepare("SELECT * FROM users").all();
+
+  const user = users.find(
+    account => normalizeEmail(account.email) === email
+  );
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(401).json({ error: "Incorrect email or password." });
+    return res.status(401).json({
+      error: "Incorrect email or password."
+    });
   }
 
   req.session.userId = user.id;
-  res.json({ user: getUser(user.id) });
+
+  res.json({
+    user: getUser(user.id)
+  });
 });
 
 // Logout
@@ -272,7 +348,9 @@ app.post(
     const videoFile = req.files?.video?.[0];
 
     if (imageFile && videoFile) {
-      return res.status(400).json({ error: "Upload either a photo or a video, not both." });
+      return res.status(400).json({
+        error: "Upload either a photo or a video, not both."
+      });
     }
 
     const image = imageFile ? "/uploads/" + imageFile.filename : "";
@@ -280,7 +358,9 @@ app.post(
     const mediaType = image ? "image" : video ? "video" : "";
 
     if (!body && !image && !video) {
-      return res.status(400).json({ error: "Write something or select a photo/video." });
+      return res.status(400).json({
+        error: "Write something or select a photo/video."
+      });
     }
 
     if (!["text", "photo", "video", "feeling", "link", "poll"].includes(type)) {
@@ -290,37 +370,62 @@ app.post(
     if (type === "link" && extra) {
       try {
         const url = new URL(extra);
-        if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+
+        if (!["http:", "https:"].includes(url.protocol)) {
+          throw new Error();
+        }
       } catch {
-        return res.status(400).json({ error: "Enter a valid link beginning with https:// or http://." });
+        return res.status(400).json({
+          error: "Enter a valid link beginning with https:// or http://."
+        });
       }
     }
 
     const result = db.prepare(`
       INSERT INTO posts (user_id, type, body, extra, image, video, media_type)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(req.session.userId, type, body, extra, image, video, mediaType);
+    `).run(
+      req.session.userId,
+      type,
+      body,
+      extra,
+      image,
+      video,
+      mediaType
+    );
 
-    res.json({ post: getPost(Number(result.lastInsertRowid), req.session.userId) });
+    res.json({
+      post: getPost(Number(result.lastInsertRowid), req.session.userId)
+    });
   }
 );
 
 // Like / unlike
 app.post("/api/posts/:id/like", requireAuth, (req, res) => {
   const postId = Number(req.params.id);
-  const post = db.prepare("SELECT id FROM posts WHERE id = ?").get(postId);
 
-  if (!post) return res.status(404).json({ error: "Post not found." });
+  const post = db.prepare(
+    "SELECT id FROM posts WHERE id = ?"
+  ).get(postId);
+
+  if (!post) {
+    return res.status(404).json({ error: "Post not found." });
+  }
 
   const userId = req.session.userId;
+
   const existing = db.prepare(
     "SELECT 1 FROM likes WHERE user_id = ? AND post_id = ?"
   ).get(userId, postId);
 
   if (existing) {
-    db.prepare("DELETE FROM likes WHERE user_id = ? AND post_id = ?").run(userId, postId);
+    db.prepare(
+      "DELETE FROM likes WHERE user_id = ? AND post_id = ?"
+    ).run(userId, postId);
   } else {
-    db.prepare("INSERT INTO likes (user_id, post_id) VALUES (?, ?)").run(userId, postId);
+    db.prepare(
+      "INSERT INTO likes (user_id, post_id) VALUES (?, ?)"
+    ).run(userId, postId);
   }
 
   res.json({ post: getPost(postId, userId) });
@@ -345,11 +450,18 @@ app.post("/api/posts/:id/comments", requireAuth, (req, res) => {
   const body = String(req.body.body || "").trim();
 
   if (!body || body.length > 1000) {
-    return res.status(400).json({ error: "Comment must be 1–1000 characters." });
+    return res.status(400).json({
+      error: "Comment must be 1–1000 characters."
+    });
   }
 
-  const post = db.prepare("SELECT id FROM posts WHERE id = ?").get(postId);
-  if (!post) return res.status(404).json({ error: "Post not found." });
+  const post = db.prepare(
+    "SELECT id FROM posts WHERE id = ?"
+  ).get(postId);
+
+  if (!post) {
+    return res.status(404).json({ error: "Post not found." });
+  }
 
   const result = db.prepare(`
     INSERT INTO comments (user_id, post_id, body)
@@ -359,7 +471,8 @@ app.post("/api/posts/:id/comments", requireAuth, (req, res) => {
   res.json({
     comment: db.prepare(`
       SELECT c.id, c.body, c.created_at, u.id AS user_id, u.name
-      FROM comments c JOIN users u ON u.id = c.user_id
+      FROM comments c
+      JOIN users u ON u.id = c.user_id
       WHERE c.id = ?
     `).get(Number(result.lastInsertRowid))
   });
@@ -368,12 +481,18 @@ app.post("/api/posts/:id/comments", requireAuth, (req, res) => {
 // Share a post
 app.post("/api/posts/:id/share", requireAuth, (req, res) => {
   const postId = Number(req.params.id);
-  const post = db.prepare("SELECT id FROM posts WHERE id = ?").get(postId);
 
-  if (!post) return res.status(404).json({ error: "Post not found." });
+  const post = db.prepare(
+    "SELECT id FROM posts WHERE id = ?"
+  ).get(postId);
 
-  db.prepare("INSERT INTO shares (user_id, post_id) VALUES (?, ?)")
-    .run(req.session.userId, postId);
+  if (!post) {
+    return res.status(404).json({ error: "Post not found." });
+  }
+
+  db.prepare(
+    "INSERT INTO shares (user_id, post_id) VALUES (?, ?)"
+  ).run(req.session.userId, postId);
 
   res.json({ post: getPost(postId, req.session.userId) });
 });
@@ -381,7 +500,10 @@ app.post("/api/posts/:id/share", requireAuth, (req, res) => {
 // User search
 app.get("/api/users/search", requireAuth, (req, res) => {
   const q = String(req.query.q || "").trim().slice(0, 50);
-  if (!q) return res.json({ users: [] });
+
+  if (!q) {
+    return res.json({ users: [] });
+  }
 
   const users = db.prepare(`
     SELECT id, name, bio
@@ -399,7 +521,9 @@ app.get("/api/users/:id", requireAuth, (req, res) => {
   const userId = Number(req.params.id);
   const user = getUser(userId);
 
-  if (!user) return res.status(404).json({ error: "User not found." });
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
 
   const friendship = db.prepare(`
     SELECT * FROM friend_requests
@@ -439,15 +563,20 @@ app.patch("/api/profile", requireAuth, (req, res) => {
   const bio = String(req.body.bio || "").trim();
 
   if (name.length < 2 || name.length > 50) {
-    return res.status(400).json({ error: "Name must be 2–50 characters." });
+    return res.status(400).json({
+      error: "Name must be 2–50 characters."
+    });
   }
 
   if (bio.length > 300) {
-    return res.status(400).json({ error: "Bio must be 300 characters or fewer." });
+    return res.status(400).json({
+      error: "Bio must be 300 characters or fewer."
+    });
   }
 
-  db.prepare("UPDATE users SET name = ?, bio = ? WHERE id = ?")
-    .run(name, bio, req.session.userId);
+  db.prepare(
+    "UPDATE users SET name = ?, bio = ? WHERE id = ?"
+  ).run(name, bio, req.session.userId);
 
   res.json({ user: getUser(req.session.userId) });
 });
@@ -458,7 +587,9 @@ app.post("/api/friends/request/:id", requireAuth, (req, res) => {
   const senderId = req.session.userId;
 
   if (!Number.isInteger(receiverId) || receiverId === senderId) {
-    return res.status(400).json({ error: "Invalid friend request." });
+    return res.status(400).json({
+      error: "Invalid friend request."
+    });
   }
 
   if (!getUser(receiverId)) {
@@ -472,7 +603,9 @@ app.post("/api/friends/request/:id", requireAuth, (req, res) => {
   `).get(senderId, receiverId, receiverId, senderId);
 
   if (existing) {
-    return res.status(409).json({ error: "A friend request or friendship already exists." });
+    return res.status(409).json({
+      error: "A friend request or friendship already exists."
+    });
   }
 
   db.prepare(`
@@ -517,7 +650,9 @@ app.post("/api/friends/accept/:id", requireAuth, (req, res) => {
   `).run(requestId, req.session.userId);
 
   if (!result.changes) {
-    return res.status(404).json({ error: "Friend request not found." });
+    return res.status(404).json({
+      error: "Friend request not found."
+    });
   }
 
   res.json({ success: true });
@@ -535,7 +670,9 @@ app.delete("/api/friends/request/:id", requireAuth, (req, res) => {
   `).run(requestId, req.session.userId, req.session.userId);
 
   if (!result.changes) {
-    return res.status(404).json({ error: "Pending request not found." });
+    return res.status(404).json({
+      error: "Pending request not found."
+    });
   }
 
   res.json({ success: true });
@@ -575,7 +712,9 @@ app.delete("/api/friends/:id", requireAuth, (req, res) => {
   `).run(req.session.userId, friendId, friendId, req.session.userId);
 
   if (!result.changes) {
-    return res.status(404).json({ error: "Friendship not found." });
+    return res.status(404).json({
+      error: "Friendship not found."
+    });
   }
 
   res.json({ success: true });
@@ -587,11 +726,14 @@ app.use((err, req, res, next) => {
     const message = err.code === "LIMIT_FILE_SIZE"
       ? "File is too large. Maximum size is 50 MB."
       : "File upload failed.";
+
     return res.status(400).json({ error: message });
   }
 
   if (err) {
-    return res.status(400).json({ error: err.message || "Something went wrong." });
+    return res.status(400).json({
+      error: err.message || "Something went wrong."
+    });
   }
 
   next();
