@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HappyLife — Share your moments</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/">HappyLife<span>●</span></a><div id="topUser"></div></header>
+<main>
+<section id="auth" class="auth-wrap">
+  <div class="intro"><div class="mark">H</div><h1>Share life. Stay connected.</h1><p>A friendly place to share your moments, ideas and everyday stories.</p></div>
+  <div class="auth-card">
+    <div class="tabs"><button class="tab active" data-tab="login">Log in</button><button class="tab" data-tab="register">Create account</button></div>
+    <form id="loginForm"><input name="email" type="email" placeholder="Email address" required><input name="password" type="password" placeholder="Password" required><button class="primary">Log in</button></form>
+    <form id="registerForm" hidden><input name="name" placeholder="Your name" minlength="2" maxlength="50" required><input name="email" type="email" placeholder="Email address" required><input name="password" type="password" placeholder="Password (at least 8 characters)" minlength="8" required><button class="primary">Create account</button></form>
+    <p id="authMessage" class="message"></p><small>Use a unique password. This starter app stores accounts in its own local database.</small>
+  </div>
+</section>
+<section id="app" hidden>
+  <div class="layout">
+    <aside class="side"><div class="side-card"><div class="avatar">H</div><h3 id="welcomeName">Welcome</h3><p>Your HappyLife community</p><button id="logout" class="ghost">Log out</button></div><div class="side-note">✨ Share kindly. Connect positively.</div></aside>
+    <section class="feed">
+      <div class="composer card">
+        <h2>Create a post</h2>
+        <form id="postForm">
+          <textarea name="body" placeholder="What's happening?" maxlength="2000"></textarea>
+          <div class="post-options">
+            <select name="type" id="postType"><option value="text">📝 Text post</option><option value="photo">📷 Photo post</option><option value="feeling">😊 Feeling / activity</option><option value="link">🔗 Link post</option><option value="poll">📊 Question / poll</option></select>
+            <input name="extra" id="extra" placeholder="Optional: feeling, link, or poll choices">
+            <label class="file-label">Add photo <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+            <button class="primary publish">Post</button>
+          </div>
+        </form><p id="postMessage" class="message"></p>
+      </div>
+      <div class="feed-heading"><h2>Your feed</h2><span>Latest posts</span></div>
+      <div id="posts"></div>
+    </section>
+    <aside class="right"><div class="card tips"><h3>Welcome to HappyLife</h3><p>Post a thought, share a photo, ask a question or share a useful link.</p><p class="muted">Be respectful and protect your personal information.</p></div></aside>
+  </div>
+</section>
+</main>
+<div id="toast" role="status"></div><script src="/app.js"></script>
+</body></html>
