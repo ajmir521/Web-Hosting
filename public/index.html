@@ -9,13 +9,16 @@
 </head>
 <body>
 
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" style="display: none;"></div>
+
   <!-- Top Facebook-Style Navigation Bar -->
-  <header class="fb-navbar" id="top-navbar">
+  <header class="fb-navbar">
     <div class="nav-left">
       <div class="fb-logo">h</div>
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="search-input" placeholder="Search HappyLife" />
+        <input type="text" id="searchInput" placeholder="Search HappyLife posts..." />
       </div>
     </div>
 
@@ -27,19 +30,18 @@
     </div>
 
     <div class="nav-right">
-      <div class="user-pill" id="nav-user-info" style="display: none;">
-        <div class="avatar-sm" id="nav-avatar">U</div>
-        <span id="nav-username">User</span>
+      <div class="user-pill" id="navUserPill" hidden>
+        <div class="avatar-sm" id="topAvatar">U</div>
+        <span id="topUser"></span>
       </div>
-      <button class="icon-btn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
-      <button class="icon-btn" id="logout-btn" title="Log Out" style="display: none;">
+      <button class="icon-btn" id="logout" title="Log Out" hidden>
         <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
   </header>
 
-  <!-- Auth Section (Shown when logged out - Classic Facebook Login UI) -->
-  <main class="auth-wrapper" id="auth-section">
+  <!-- Auth Section (Classic Facebook Login & Signup UI) -->
+  <main class="auth-wrapper" id="auth">
     <div class="auth-container">
       <div class="auth-brand">
         <h1>happylife</h1>
@@ -47,27 +49,26 @@
       </div>
 
       <div class="auth-cards">
-        <!-- Login Form -->
         <div class="card auth-card">
-          <form id="login-form">
-            <input type="email" id="login-email" placeholder="Email address" required />
-            <input type="password" id="login-password" placeholder="Password" required />
+          <div class="auth-tabs">
+            <button type="button" class="tab active" data-tab="login">Log In</button>
+            <button type="button" class="tab" data-tab="register">Create Account</button>
+          </div>
+
+          <p id="authMessage" class="error-msg"></p>
+
+          <!-- Login Form -->
+          <form id="loginForm">
+            <input type="email" name="email" placeholder="Email address" required />
+            <input type="password" name="password" placeholder="Password" required />
             <button type="submit" class="btn-fb-primary">Log In</button>
           </form>
-          <div class="divider"></div>
-          <button type="button" class="btn-fb-green" onclick="document.getElementById('register-box').style.display='block'">
-            Create new account
-          </button>
-        </div>
 
-        <!-- Register Form -->
-        <div class="card auth-card" id="register-box" style="margin-top: 15px;">
-          <h3>Sign Up</h3>
-          <p class="sub-text">It’s quick and easy.</p>
-          <form id="register-form">
-            <input type="text" id="register-name" placeholder="Full name" required />
-            <input type="email" id="register-email" placeholder="Email address" required />
-            <input type="password" id="register-password" placeholder="New password (min 8 chars)" required />
+          <!-- Register Form -->
+          <form id="registerForm" hidden>
+            <input type="text" name="name" placeholder="Full name" required />
+            <input type="email" name="email" placeholder="Email address" required />
+            <input type="password" name="password" placeholder="Password (at least 8 characters)" minlength="8" required />
             <button type="submit" class="btn-fb-green">Sign Up</button>
           </form>
         </div>
@@ -76,13 +77,13 @@
   </main>
 
   <!-- Main 3-Column Facebook Feed (Shown when logged in) -->
-  <div class="fb-layout" id="app-section" style="display: none;">
+  <div class="fb-layout" id="app" hidden>
     
     <!-- Left Sidebar -->
     <aside class="left-sidebar">
       <div class="sidebar-item profile-link">
-        <div class="avatar-md" id="sidebar-avatar">A</div>
-        <strong id="sidebar-username">Ajmir Hosen</strong>
+        <div class="avatar-md" id="sidebarAvatar">A</div>
+        <strong id="welcomeName">User</strong>
       </div>
       <div class="sidebar-item"><i class="fa-solid fa-user-group blue"></i> <span>Friends</span></div>
       <div class="sidebar-item"><i class="fa-solid fa-clock-rotate-left blue"></i> <span>Memories</span></div>
@@ -96,11 +97,11 @@
       
       <!-- Stories Row -->
       <div class="stories-row">
-        <div class="story-card create-story">
+        <div class="story-card create-story" onclick="document.querySelector('#postForm textarea').focus()">
           <div class="story-plus"><i class="fa-solid fa-plus"></i></div>
           <span>Create Story</span>
         </div>
-        <div class="story-card sample-story" style="background: linear-gradient(135deg, #1877f2, #42b72a);">
+        <div class="story-card sample-story" style="background: linear-gradient(135deg, #1877f2, #00c6ff);">
           <span>Welcome to HappyLife!</span>
         </div>
         <div class="story-card sample-story" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
@@ -110,67 +111,57 @@
 
       <!-- Create Post Box -->
       <div class="card create-post-card">
-        <form id="post-form">
+        <form id="postForm" enctype="multipart/form-data">
           <div class="post-top">
-            <div class="avatar-md" id="post-avatar">A</div>
-            <textarea id="post-content" rows="2" placeholder="What's on your mind?" required></textarea>
+            <div class="avatar-md" id="postAvatar">A</div>
+            <textarea name="body" rows="2" placeholder="What's on your mind?"></textarea>
           </div>
           
           <div class="post-extras">
-            <select id="post-type">
-              <option value="text">📝 Text Post</option>
-              <option value="feeling">😊 Feeling/Activity</option>
+            <select name="type" id="postType">
+              <option value="text">📝 Text post</option>
+              <option value="feeling">😊 Feeling/activity</option>
               <option value="link">🔗 Link</option>
-              <option value="question">❓ Question</option>
+              <option value="poll">📊 Question / Poll</option>
             </select>
-            <input type="text" id="post-extra" placeholder="Optional: feeling, link, or context" />
+            <input type="text" name="extra" id="extra" placeholder="Optional extra information" />
           </div>
 
+          <p id="postMessage" class="error-msg"></p>
           <div class="divider"></div>
 
-          <div class="post-actions">
+          <div class="post-actions-bar">
             <label class="photo-upload-btn">
               <i class="fa-solid fa-images green"></i> Photo/Image
-              <input type="file" id="post-image" accept="image/*" hidden />
+              <input type="file" name="image" id="postImage" accept="image/*" hidden />
             </label>
-            <span id="file-name" class="file-label"></span>
+            <span id="fileName" class="file-label"></span>
             <button type="submit" class="btn-fb-primary btn-post">Post</button>
           </div>
         </form>
       </div>
 
       <!-- Posts Feed Container -->
-      <div id="posts-container" class="posts-feed">
-        <!-- Posts will be dynamically injected here by app.js -->
-      </div>
+      <div id="posts" class="posts-feed"></div>
     </section>
 
     <!-- Right Sidebar -->
     <aside class="right-sidebar">
       <div class="card right-card">
         <h4>Community Info</h4>
-        <p>Welcome to <strong>HappyLife Social</strong>. Share thoughts, photos, and connect with your friends.</p>
+        <p>Welcome to <strong>HappyLife Social</strong>. Post thoughts, share photos, and connect with everyone.</p>
       </div>
       <div class="contacts-header">
         <h4>Contacts</h4>
       </div>
       <div class="sidebar-item">
-        <div class="avatar-sm online">H</div>
-        <span>HappyLife Bot</span>
+        <div class="avatar-sm">H</div>
+        <span>HappyLife Community</span>
       </div>
     </aside>
 
   </div>
 
   <script src="app.js"></script>
-  <script>
-    // Show selected file name
-    const fileInput = document.getElementById('post-image');
-    if (fileInput) {
-      fileInput.addEventListener('change', function() {
-        document.getElementById('file-name').textContent = this.files[0] ? this.files[0].name : '';
-      });
-    }
-  </script>
 </body>
 </html>
